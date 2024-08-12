@@ -2,20 +2,36 @@ import streamlit as st
 from google.cloud import vision
 import io
 from PIL import Image
+import base64
+import os
+import tempfile
+
+# Lee las credenciales desde el secreto en formato Base64
+def get_credentials_from_secrets():
+    import streamlit.secrets as secrets
+    base64_credentials = secrets["gcloud"]["credentials"]
+    return base64.b64decode(base64_credentials)
+
+# Guarda las credenciales en un archivo temporal
+def save_credentials_to_temp_file():
+    credentials_data = get_credentials_from_secrets()
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.json')
+    with open(temp_file.name, 'wb') as f:
+        f.write(credentials_data)
+    return temp_file.name
+
+# Configura la variable de entorno para Google Cloud
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = save_credentials_to_temp_file()
 
 def detect_text_google(image):
-    # Crea un cliente de la API de Google Cloud Vision
     client = vision.ImageAnnotatorClient()
 
-    # Convierte la imagen a bytes usando BytesIO
     image_byte_array = io.BytesIO()
     image.save(image_byte_array, format='PNG')
     content = image_byte_array.getvalue()
 
-    # Crea un objeto Image para enviar a la API
     image = vision.Image(content=content)
 
-    # Realiza la detección de texto
     response = client.text_detection(image=image)
     texts = response.text_annotations
     return texts[0].description if texts else "No text found"
