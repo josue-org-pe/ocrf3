@@ -8,8 +8,9 @@ import tempfile
 
 # Lee las credenciales desde el secreto en formato Base64
 def get_credentials_from_secrets():
-    import streamlit.secrets as secrets
-    base64_credentials = secrets["gcloud"]["credentials"]
+    # Accede a los secretos configurados en Streamlit Cloud
+    secrets = st.secrets["gcloud"]
+    base64_credentials = secrets["credentials"]
     return base64.b64decode(base64_credentials)
 
 # Guarda las credenciales en un archivo temporal
